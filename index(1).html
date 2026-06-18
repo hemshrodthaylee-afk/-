@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI带教任务协同与智能督导工具</title>
+  <style>
+    :root {
+      --bg: #0d0b10;
+      --panel: #17131b;
+      --panel-2: #201923;
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #f7edf4;
+      --muted: #a99fac;
+      --pink: #ff4fa3;
+      --pink-2: #ff86c6;
+      --cyan: #49d7d0;
+      --amber: #ffd166;
+      --green: #70e38f;
+      --red: #ff6b7d;
+      --shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(135deg, rgba(255, 79, 163, 0.12), transparent 34%),
+        linear-gradient(220deg, rgba(73, 215, 208, 0.08), transparent 30%),
+        var(--bg);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+    }
+
+    .screen {
+      min-height: 100vh;
+    }
+
+    .login-screen {
+      display: grid;
+      grid-template-columns: minmax(320px, 460px) minmax(360px, 1fr);
+      gap: 44px;
+      align-items: center;
+      padding: 48px min(7vw, 88px);
+    }
+
+    .brand h1 {
+      margin: 0;
+      max-width: 720px;
+      font-size: clamp(34px, 5vw, 68px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      max-width: 620px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      color: var(--pink-2);
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .brand-mark::before {
+      content: "";
+      width: 30px;
+      height: 10px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      border-radius: 999px;
+    }
+
+    .login-card,
+    .card,
+    .metric,
+    .student-card,
+    .modal-card {
+      border: 1px solid var(--line);
+      background: rgba(23, 19, 27, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .login-card {
+      padding: 30px;
+      border-radius: 8px;
+    }
+
+    .login-card h2,
+    .section-title h2,
+    .form-card h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #100d13;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 12px 13px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(255, 79, 163, 0.85);
+      box-shadow: 0 0 0 3px rgba(255, 79, 163, 0.14);
+    }
+
+    .primary-btn {
+      width: 100%;
+      margin-top: 22px;
+      padding: 13px 16px;
+      color: #100d13;
+      font-weight: 800;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--pink), var(--pink-2));
+    }
+
+    .ghost-btn,
+    .small-btn {
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .small-btn {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+
+    .accent-btn {
+      color: #120d14;
+      background: var(--cyan);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .danger-btn {
+      color: #fff;
+      background: rgba(255, 107, 125, 0.2);
+      border-color: rgba(255, 107, 125, 0.34);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 18px min(4vw, 46px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(13, 11, 16, 0.86);
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--pink-2);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .role-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 16px var(--pink);
+    }
+
+    main {
+      padding: 28px min(4vw, 46px) 46px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 116px;
+      border-radius: 8px;
+      padding: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card,
+    .student-card,
+    .form-card {
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .student-card {
+      background: linear-gradient(180deg, rgba(255, 79, 163, 0.08), rgba(23, 19, 27, 0.92));
+    }
+
+    .student-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .student-head h3,
+    .task-title {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .meta,
+    .question-item,
+    .task-desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .tag {
+      white-space: nowrap;
+      align-self: flex-start;
+      border: 1px solid rgba(255, 79, 163, 0.35);
+      background: rgba(255, 79, 163, 0.12);
+      color: var(--pink-2);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+    }
+
+    .tag.green {
+      color: var(--green);
+      border-color: rgba(112, 227, 143, 0.35);
+      background: rgba(112, 227, 143, 0.12);
+    }
+
+    .tag.amber {
+      color: var(--amber);
+      border-color: rgba(255, 209, 102, 0.35);
+      background: rgba(255, 209, 102, 0.12);
+    }
+
+    .task-list,
+    .question-list,
+    .cluster-list,
+    .suggestion-list {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .task-item,
+    .cluster-item,
+    .suggestion-item {
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.045);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .task-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .task-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .progress {
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      border-radius: inherit;
+      transition: width 0.25s ease;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .divider-title {
+      margin: 18px 0 8px;
+      color: var(--pink-2);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .question-item {
+      border-left: 3px solid var(--pink);
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .thread-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .thread-card {
+      border: 1px solid rgba(255, 79, 163, 0.16);
+      background: rgba(255, 79, 163, 0.055);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .thread-card.compact {
+      margin-top: 8px;
+    }
+
+    .thread-message {
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .thread-message + .thread-message {
+      margin-top: 8px;
+    }
+
+    .thread-message.mentor {
+      border-left: 3px solid var(--cyan);
+    }
+
+    .thread-message.student {
+      border-left: 3px solid var(--pink);
+    }
+
+    .thread-author {
+      color: var(--pink-2);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .thread-message.mentor .thread-author {
+      color: var(--cyan);
+    }
+
+    .thread-text {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .evaluation-panel {
+      margin-top: 12px;
+      border: 1px solid rgba(73, 215, 208, 0.2);
+      background: rgba(73, 215, 208, 0.055);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .score-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .score-number {
+      color: var(--cyan);
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .score-item {
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.045);
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .score-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .score-item strong {
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    .evaluation-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-card {
+      position: sticky;
+      top: 92px;
+      border: 1px solid rgba(255, 79, 163, 0.22);
+      background: rgba(32, 25, 35, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .cluster-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cluster-name {
+      font-weight: 800;
+    }
+
+    .empty {
+      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.62);
+      z-index: 50;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(460px, 100%);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .modal-card h3 {
+      margin: 0 0 12px;
+    }
+
+    .range-value {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    input[type="range"] {
+      accent-color: var(--pink);
+      padding: 0;
+      margin-top: 12px;
+      background: transparent;
+      border: 0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1040px) {
+      .login-screen,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .login-screen {
+        padding: 28px 18px;
+      }
+
+      .dashboard,
+      .student-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topbar .ghost-btn {
+        width: 100%;
+      }
+
+      main {
+        padding: 20px 14px 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="screen login-screen">
+    <div class="brand">
+      <div class="brand-mark">MentorHub</div>
+      <h1>AI带教任务协同与智能督导工具</h1>
+      <p>面向市场营销部门的新人成长与导师协作原型，聚合任务进度、问题反馈与智能看板，让带教节奏更清晰。</p>
+    </div>
+
+    <form id="loginForm" class="login-card">
+      <h2>登录工作台</h2>
+      <div class="field">
+        <label for="accountSelect">账号</label>
+        <select id="accountSelect">
+          <option value="mentor">导师容琰</option>
+          <option value="lin">学员林诗颖</option>
+          <option value="guo">学员郭美辰</option>
+          <option value="chen">学员陈静</option>
+          <option value="he">学员贺雨菡</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="passwordInput">密码</label>
+        <input id="passwordInput" type="password" placeholder="任意输入即可" />
+      </div>
+      <button class="primary-btn" type="submit">登录</button>
+    </form>
+  </section>
+
+  <section id="appScreen" class="screen app-shell hidden">
+    <header class="topbar">
+      <div>
+        <h1>AI带教任务协同与智能督导工具</h1>
+        <div id="roleLine" class="role-pill"></div>
+      </div>
+      <button id="logoutBtn" class="ghost-btn danger-btn" type="button">退出登录</button>
+    </header>
+    <main id="appMain"></main>
+  </section>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div id="modalCard" class="modal-card"></div>
+  </div>
+
+  <script>
+    const state = {
+      currentUserId: null,
+      users: {
+        mentor: { id: "mentor", name: "容琰", label: "导师容琰", role: "mentor" },
+        lin: { id: "lin", name: "林诗颖", label: "学员林诗颖", role: "student", department: "市场营销部", stage: "初始期" },
+        guo: { id: "guo", name: "郭美辰", label: "学员郭美辰", role: "student", department: "市场营销部", stage: "在岗期" },
+        chen: { id: "chen", name: "陈静", label: "学员陈静", role: "student", department: "市场营销部", stage: "强化期" },
+        he: { id: "he", name: "贺雨菡", label: "学员贺雨菡", role: "student", department: "市场营销部", stage: "在岗期" }
+      },
+      tasks: {
+        lin: [
+          { id: "lin-1", title: "竞品社媒内容拆解", desc: "梳理3个重点竞品的小红书与抖音内容策略，提炼可借鉴打法。", due: "2026-06-12", progress: 70 },
+          { id: "lin-2", title: "618活动复盘初稿", desc: "整理活动曝光、点击、线索转化数据，形成复盘草稿。", due: "2026-06-08", progress: 40 },
+          { id: "lin-3", title: "客户画像标签校对", desc: "校对CRM中新增线索标签，标记异常或缺失字段。", due: "2026-06-16", progress: 10 }
+        ],
+        guo: [
+          { id: "guo-1", title: "渠道投放日报模板", desc: "设计适用于信息流与搜索渠道的投放日报结构。", due: "2026-06-11", progress: 95 },
+          { id: "guo-2", title: "落地页文案AB方案", desc: "为新品预约页输出两组标题、卖点与按钮文案。", due: "2026-06-15", progress: 55 }
+        ],
+        chen: [
+          { id: "chen-1", title: "线索跟进话术整理", desc: "沉淀销售转化高频问题，并补充营销侧承接话术。", due: "2026-06-10", progress: 100 },
+          { id: "chen-2", title: "私域社群运营计划", desc: "规划一周社群内容节奏、互动主题和转化触点。", due: "2026-06-09", progress: 60 },
+          { id: "chen-3", title: "月度内容选题池", desc: "围绕品牌曝光、产品教育和案例种草输出20个选题。", due: "2026-06-18", progress: 0 }
+        ],
+        he: [
+          { id: "he-1", title: "品牌活动物料清单", desc: "核对线下沙龙所需海报、易拉宝、邀请函与伴手礼。", due: "2026-06-07", progress: 80 },
+          { id: "he-2", title: "达人合作名单初筛", desc: "基于粉丝画像、内容质量和报价筛选15位达人。", due: "2026-06-14", progress: 35 }
+        ]
+      },
+      questions: {
+        lin: [
+          { id: "q-lin-1", taskId: "lin-2", text: "活动转化率口径是按提交表单还是有效线索计算？", createdAt: "2026-06-08", replies: [
+            { role: "mentor", author: "容琰", text: "复盘看板按有效线索计算，同时在备注里补充提交表单数。", createdAt: "2026-06-08" }
+          ] },
+          { id: "q-lin-2", taskId: "lin-1", text: "竞品内容互动率需要剔除抽奖贴吗？", createdAt: "2026-06-09", replies: [] }
+        ],
+        guo: [
+          { id: "q-guo-1", taskId: "guo-2", text: "落地页主按钮更适合写立即预约还是领取方案？", createdAt: "2026-06-08", replies: [] }
+        ],
+        chen: [
+          { id: "q-chen-1", taskId: "chen-2", text: "社群转化节点应该安排在第几天比较自然？", createdAt: "2026-06-09", replies: [] },
+          { id: "q-chen-2", taskId: "chen-1", text: "销售话术里价格异议是否需要单独成段？", createdAt: "2026-06-06", replies: [
+            { role: "mentor", author: "容琰", text: "需要单独成段，建议按预算不足、价值不清晰、竞品比价三类整理。", createdAt: "2026-06-07" }
+          ] }
+        ],
+        he: [
+          { id: "q-he-1", taskId: "he-1", text: "沙龙物料到场时间需要提前几小时确认？", createdAt: "2026-06-07", replies: [] },
+          { id: "q-he-2", taskId: "he-2", text: "达人筛选时品牌契合度有没有评分标准？", createdAt: "2026-06-09", replies: [] }
+        ]
+      },
+      evaluations: {
+        lin: { delivery: 78, marketing: 82, communication: 86, growth: 88, discipline: 80, comment: "学习速度快，能主动拆解竞品内容，后续需要加强数据复盘的口径意识。", updatedAt: "2026-06-09" },
+        guo: { delivery: 88, marketing: 84, communication: 79, growth: 83, discipline: 86, comment: "任务推进稳定，投放日报结构清晰，建议进一步提升跨渠道复盘的归因能力。", updatedAt: "2026-06-09" },
+        chen: { delivery: 76, marketing: 80, communication: 74, growth: 82, discipline: 78, comment: "营销话术沉淀有质量，社群运营节奏还需更细，建议强化转化节点设计。", updatedAt: "2026-06-09" },
+        he: { delivery: 72, marketing: 77, communication: 81, growth: 79, discipline: 75, comment: "活动执行意识较好，达人筛选标准需要继续量化，适合通过复盘提升判断力。", updatedAt: "2026-06-09" }
+      }
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const appMain = document.querySelector("#appMain");
+    const loginScreen = document.querySelector("#loginScreen");
+    const appScreen = document.querySelector("#appScreen");
+    const roleLine = document.querySelector("#roleLine");
+    const modal = document.querySelector("#modal");
+    const modalCard = document.querySelector("#modalCard");
+
+    document.querySelector("#loginForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      state.currentUserId = document.querySelector("#accountSelect").value;
+      loginScreen.classList.add("hidden");
+      appScreen.classList.remove("hidden");
+      renderApp();
+    });
+
+    document.querySelector("#logoutBtn").addEventListener("click", () => {
+      state.currentUserId = null;
+      appScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      appMain.innerHTML = "";
+      document.querySelector("#passwordInput").value = "";
+    });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    function students() {
+      return Object.values(state.users).filter((user) => user.role === "student");
+    }
+
+    function getCurrentUser() {
+      return state.users[state.currentUserId];
+    }
+
+    function renderApp() {
+      const user = getCurrentUser();
+      roleLine.textContent = user.role === "mentor" ? "导师工作台：容琰" : `学员工作台：你好，${user.name}`;
+      appMain.innerHTML = user.role === "mentor" ? renderMentorView() : renderStudentView(user.id);
+      bindDynamicActions();
+    }
+
+    function renderMentorView() {
+      return `
+        ${renderDashboard("mentor")}
+        <div class="grid-2">
+          <section>
+            <div class="section-title">
+              <div>
+                <h2>学员任务概览</h2>
+                <p>查看每位学员的任务进度与问题反馈，进度由学员本人更新。</p>
+              </div>
+            </div>
+            <div class="student-grid">
+              ${students().map((student) => renderStudentCard(student)).join("")}
+            </div>
+          </section>
+          <aside class="form-card">
+            <h2>发布新任务</h2>
+            <form id="taskForm">
+              <div class="field">
+                <label for="taskTitle">任务标题</label>
+                <input id="taskTitle" required placeholder="例如：新品推广短视频脚本" />
+              </div>
+              <div class="field">
+                <label for="taskDesc">任务描述</label>
+                <textarea id="taskDesc" required placeholder="描述任务目标、交付物或注意事项"></textarea>
+              </div>
+              <div class="field">
+                <label for="taskDue">截止日期</label>
+                <input id="taskDue" type="date" required />
+              </div>
+              <div class="field">
+                <label for="taskAssignee">指派学员</label>
+                <select id="taskAssignee">
+                  ${students().map((student) => `<option value="${student.id}">${student.name}</option>`).join("")}
+                </select>
+              </div>
+              <button class="primary-btn" type="submit">发布任务</button>
+            </form>
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderStudentView(studentId) {
+      const user = state.users[studentId];
+      return `
+        ${renderDashboard("student", studentId)}
+        ${renderEvaluationPanel(studentId, false)}
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>你好，${user.name}</h2>
+              <p>我的任务</p>
+            </div>
+          </div>
+          <ul class="task-list">
+            ${state.tasks[studentId].map((task) => renderTaskItem(task, studentId, true)).join("")}
+          </ul>
+        </section>
+      `;
+    }
+
+    function renderDashboard(role, studentId) {
+      const ids = role === "mentor" ? students().map((student) => student.id) : [studentId];
+      const stats = calcStats(ids);
+      const clusters = clusterQuestions(ids);
+      const suggestions = role === "mentor"
+        ? ["优先梳理转化率、投放口径等共性标准，减少学员重复确认成本。", "对延期任务设置每日短同步，聚焦交付物阻塞点和跨部门依赖。"]
+        : personalSuggestions(stats);
+
+      return `
+        <section class="dashboard">
+          <div class="metric"><span>${role === "mentor" ? "所有学员平均完成率" : "个人完成率"}</span><strong>${stats.avg}%</strong></div>
+          <div class="metric"><span>${role === "mentor" ? "总延迟任务数" : "自己的延迟任务数"}</span><strong>${stats.delayed}</strong></div>
+          <div class="metric"><span>${role === "mentor" ? "总待解决问题数" : "自己的待解决问题数"}</span><strong>${stats.questions}</strong></div>
+        </section>
+        <section class="grid-2" style="margin-bottom:18px;">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>${role === "mentor" ? "全局问题聚类" : "个人问题聚类"}</h2>
+                <p>按营销业务关键词自动归类展示。</p>
+              </div>
+            </div>
+            <ul class="cluster-list">
+              ${clusters.length ? clusters.map((item) => `
+                <li class="cluster-item">
+                  <div>
+                    <div class="cluster-name">${item.name}</div>
+                    <div class="meta">${item.examples.slice(0, 2).join("；")}</div>
+                  </div>
+                  <span class="tag">${item.count}条</span>
+                </li>
+              `).join("") : `<li class="empty">暂无待聚类问题</li>`}
+            </ul>
+          </div>
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>${role === "mentor" ? "团队优化建议" : "个人优化建议"}</h2>
+                <p>基于当前任务和问题状态生成。</p>
+              </div>
+            </div>
+            <ul class="suggestion-list">
+              ${suggestions.map((item) => `<li class="suggestion-item">${item}</li>`).join("")}
+            </ul>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderStudentCard(student) {
+      const questions = state.questions[student.id];
+      return `
+        <article class="student-card">
+          <div class="student-head">
+            <div>
+              <h3>${student.name}</h3>
+              <div class="meta">${student.department} · ${student.stage}</div>
+            </div>
+            <span class="tag">${calcStats([student.id]).avg}%</span>
+          </div>
+          ${renderEvaluationPanel(student.id, true)}
+          <div class="divider-title">任务列表</div>
+          <ul class="task-list">
+            ${state.tasks[student.id].map((task) => renderTaskItem(task, student.id, false)).join("")}
+          </ul>
+          <div class="divider-title">问题列表</div>
+          <ul class="question-list">
+            ${questions.length ? questions.map((question) => renderQuestionThread(question, student.id, true)).join("") : `<li class="empty">暂无问题</li>`}
+          </ul>
+        </article>
+      `;
+    }
+
+    function renderTaskItem(task, studentId, editable) {
+      const status = getStatus(task.progress);
+      const taskQuestions = state.questions[studentId].filter((question) => question.taskId === task.id);
+      return `
+        <li class="task-item">
+          <div class="task-row">
+            <div>
+              <h3 class="task-title">${task.title}</h3>
+              <div class="task-desc">${task.desc}</div>
+              <div class="meta">截止日期：${task.due}</div>
+            </div>
+            <span class="tag ${status.className}">${status.text}</span>
+          </div>
+          <div class="progress"><span style="width:${task.progress}%"></span></div>
+          <div class="progress-label"><span>进度</span><span>${task.progress}%</span></div>
+          ${editable ? `
+            <div class="task-actions">
+              <button class="small-btn accent-btn" type="button" data-action="progress" data-student="${studentId}" data-task="${task.id}">更新进度</button>
+              <button class="small-btn" type="button" data-action="question" data-student="${studentId}" data-task="${task.id}">提问题</button>
+            </div>
+            <ul class="thread-list">
+              ${taskQuestions.length ? taskQuestions.map((question) => renderQuestionThread(question, studentId, false)).join("") : ""}
+            </ul>
+          ` : ""}
+        </li>
+      `;
+    }
+
+    function renderQuestionThread(question, studentId, mentorMode) {
+      const task = findTask(studentId, question.taskId);
+      const student = state.users[studentId];
+      const messages = [
+        { role: "student", author: student.name, text: question.text, createdAt: question.createdAt },
+        ...(question.replies || [])
+      ];
+
+      return `
+        <li class="question-item">
+          <div class="meta">${task ? task.title : "关联任务"} · ${question.createdAt}</div>
+          <div class="thread-card compact">
+            ${messages.map((message) => `
+              <div class="thread-message ${message.role}">
+                <div class="thread-author">${message.role === "mentor" ? "导师" : "学员"} ${message.author} · ${message.createdAt}</div>
+                <div class="thread-text">${escapeHtml(message.text)}</div>
+              </div>
+            `).join("")}
+          </div>
+          <div class="task-actions">
+            ${mentorMode
+              ? `<button class="small-btn accent-btn" type="button" data-action="reply" data-student="${studentId}" data-question="${question.id}">回复问题</button>`
+              : `<button class="small-btn" type="button" data-action="followup" data-student="${studentId}" data-question="${question.id}">继续追问</button>`}
+          </div>
+        </li>
+      `;
+    }
+
+    function renderEvaluationPanel(studentId, mentorMode) {
+      const evaluation = state.evaluations[studentId];
+      const total = calcEvaluationScore(evaluation);
+      const decision = getConversionDecision(total);
+      return `
+        <section class="evaluation-panel">
+          <div class="score-head">
+            <div>
+              <div class="divider-title" style="margin:0 0 6px;">带教评价</div>
+              <div class="meta">最近更新：${evaluation.updatedAt}</div>
+            </div>
+            <div class="score-number">${total}</div>
+          </div>
+          <div class="task-row">
+            <span class="tag ${decision.className}">${decision.text}</span>
+            ${mentorMode ? `<button class="small-btn accent-btn" type="button" data-action="evaluate" data-student="${studentId}">更新评分</button>` : ""}
+          </div>
+          <div class="score-grid">
+            ${evaluationDimensions().map((item) => `
+              <div class="score-item">
+                <span>${item.label}</span>
+                <strong>${evaluation[item.key]}分</strong>
+              </div>
+            `).join("")}
+          </div>
+          <div class="meta" style="margin-top:10px;">${escapeHtml(evaluation.comment)}</div>
+          <div class="meta" style="margin-top:8px;">成长结论：${getGrowthSummary(evaluation)}</div>
+        </section>
+      `;
+    }
+
+    function bindDynamicActions() {
+      const taskForm = document.querySelector("#taskForm");
+      if (taskForm) {
+        taskForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const assignee = document.querySelector("#taskAssignee").value;
+          const newTask = {
+            id: `${assignee}-${Date.now()}`,
+            title: document.querySelector("#taskTitle").value.trim(),
+            desc: document.querySelector("#taskDesc").value.trim(),
+            due: document.querySelector("#taskDue").value,
+            progress: 0
+          };
+          state.tasks[assignee].push(newTask);
+          renderApp();
+        });
+      }
+
+      document.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const studentId = button.dataset.student;
+          const taskId = button.dataset.task;
+          const questionId = button.dataset.question;
+          if (button.dataset.action === "progress") openProgressModal(studentId, taskId);
+          if (button.dataset.action === "question") openQuestionModal(studentId, taskId);
+          if (button.dataset.action === "reply") openThreadModal(studentId, questionId, "mentor");
+          if (button.dataset.action === "followup") openThreadModal(studentId, questionId, "student");
+          if (button.dataset.action === "evaluate") openEvaluationModal(studentId);
+        });
+      });
+    }
+
+    function openProgressModal(studentId, taskId) {
+      const task = findTask(studentId, taskId);
+      modalCard.innerHTML = `
+        <h3>更新进度</h3>
+        <div class="meta">${task.title}</div>
+        <input id="progressRange" type="range" min="0" max="100" value="${task.progress}" />
+        <div class="range-value"><span>当前进度</span><strong id="progressValue">${task.progress}%</strong></div>
+        <div class="task-actions">
+          <button class="small-btn accent-btn" type="button" id="saveProgress">保存</button>
+          <button class="small-btn" type="button" id="cancelModal">取消</button>
+        </div>
+      `;
+      openModal();
+      const range = document.querySelector("#progressRange");
+      range.addEventListener("input", () => {
+        document.querySelector("#progressValue").textContent = `${range.value}%`;
+      });
+      document.querySelector("#saveProgress").addEventListener("click", () => {
+        task.progress = Number(range.value);
+        closeModal();
+        renderApp();
+      });
+      document.querySelector("#cancelModal").addEventListener("click", closeModal);
+    }
+
+    function openQuestionModal(studentId, taskId) {
+      const task = findTask(studentId, taskId);
+      modalCard.innerHTML = `
+        <h3>提交问题</h3>
+        <div class="meta">${task.title}</div>
+        <div class="field">
+          <label for="questionText">问题内容</label>
+          <textarea id="questionText" placeholder="写下你遇到的卡点、口径或需要导师确认的内容"></textarea>
+        </div>
+        <div class="task-actions">
+          <button class="small-btn accent-btn" type="button" id="saveQuestion">提交</button>
+          <button class="small-btn" type="button" id="cancelModal">取消</button>
+        </div>
+      `;
+      openModal();
+      document.querySelector("#saveQuestion").addEventListener("click", () => {
+        const text = document.querySelector("#questionText").value.trim();
+        if (!text) return;
+        state.questions[studentId].push({
+          id: `q-${studentId}-${Date.now()}`,
+          taskId,
+          text,
+          createdAt: formatDate(today),
+          replies: []
+        });
+        closeModal();
+        renderApp();
+      });
+      document.querySelector("#cancelModal").addEventListener("click", closeModal);
+    }
+
+    function openThreadModal(studentId, questionId, actorRole) {
+      const question = findQuestion(studentId, questionId);
+      const student = state.users[studentId];
+      const isMentor = actorRole === "mentor";
+      modalCard.innerHTML = `
+        <h3>${isMentor ? "回复学员问题" : "继续追问"}</h3>
+        <div class="meta">${student.name}：${escapeHtml(question.text)}</div>
+        <div class="field">
+          <label for="threadText">${isMentor ? "回复内容" : "追问内容"}</label>
+          <textarea id="threadText" placeholder="${isMentor ? "输入给学员的建议、口径或下一步安排" : "补充你的疑问、背景或需要导师确认的细节"}"></textarea>
+        </div>
+        <div class="task-actions">
+          <button class="small-btn accent-btn" type="button" id="saveThread">${isMentor ? "发送回复" : "提交追问"}</button>
+          <button class="small-btn" type="button" id="cancelModal">取消</button>
+        </div>
+      `;
+      openModal();
+      document.querySelector("#saveThread").addEventListener("click", () => {
+        const text = document.querySelector("#threadText").value.trim();
+        if (!text) return;
+        question.replies = question.replies || [];
+        question.replies.push({
+          role: actorRole,
+          author: isMentor ? "容琰" : student.name,
+          text,
+          createdAt: formatDate(today)
+        });
+        closeModal();
+        renderApp();
+      });
+      document.querySelector("#cancelModal").addEventListener("click", closeModal);
+    }
+
+    function openEvaluationModal(studentId) {
+      const student = state.users[studentId];
+      const evaluation = state.evaluations[studentId];
+      modalCard.innerHTML = `
+        <h3>更新带教评价</h3>
+        <div class="meta">${student.name} · 用于量化成长、转正建议和后续培养方向</div>
+        <div class="evaluation-form-grid">
+          ${evaluationDimensions().map((item) => `
+            <div class="field">
+              <label for="eval-${item.key}">${item.label}</label>
+              <input id="eval-${item.key}" type="number" min="0" max="100" value="${evaluation[item.key]}" />
+            </div>
+          `).join("")}
+        </div>
+        <div class="field">
+          <label for="evalComment">评价评语</label>
+          <textarea id="evalComment" placeholder="写下实习生优势、短板、成长证据和转正建议">${escapeHtml(evaluation.comment)}</textarea>
+        </div>
+        <div class="task-actions">
+          <button class="small-btn accent-btn" type="button" id="saveEvaluation">保存评价</button>
+          <button class="small-btn" type="button" id="cancelModal">取消</button>
+        </div>
+      `;
+      openModal();
+      document.querySelector("#saveEvaluation").addEventListener("click", () => {
+        evaluationDimensions().forEach((item) => {
+          const value = Number(document.querySelector(`#eval-${item.key}`).value);
+          evaluation[item.key] = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+        });
+        evaluation.comment = document.querySelector("#evalComment").value.trim() || "导师暂未填写详细评语。";
+        evaluation.updatedAt = formatDate(today);
+        closeModal();
+        renderApp();
+      });
+      document.querySelector("#cancelModal").addEventListener("click", closeModal);
+    }
+
+    function openModal() {
+      modal.classList.add("active");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal() {
+      modal.classList.remove("active");
+      modal.setAttribute("aria-hidden", "true");
+      modalCard.innerHTML = "";
+    }
+
+    function findTask(studentId, taskId) {
+      return state.tasks[studentId].find((task) => task.id === taskId);
+    }
+
+    function findQuestion(studentId, questionId) {
+      return state.questions[studentId].find((question) => question.id === questionId);
+    }
+
+    function getStatus(progress) {
+      if (progress === 0) return { text: "未开始", className: "" };
+      if (progress === 100) return { text: "已完成", className: "green" };
+      return { text: "进行中", className: "amber" };
+    }
+
+    function calcStats(studentIds) {
+      const tasks = studentIds.flatMap((id) => state.tasks[id]);
+      const questions = studentIds.flatMap((id) => state.questions[id]);
+      const avg = tasks.length ? Math.round(tasks.reduce((sum, task) => sum + task.progress, 0) / tasks.length) : 0;
+      const delayed = tasks.filter((task) => new Date(`${task.due}T00:00:00`) < today && task.progress < 100).length;
+      return { avg, delayed, questions: questions.length };
+    }
+
+    function evaluationDimensions() {
+      return [
+        { key: "delivery", label: "任务交付" },
+        { key: "marketing", label: "营销专业度" },
+        { key: "communication", label: "主动沟通" },
+        { key: "growth", label: "学习成长" },
+        { key: "discipline", label: "协作纪律" }
+      ];
+    }
+
+    function calcEvaluationScore(evaluation) {
+      const keys = evaluationDimensions().map((item) => item.key);
+      return Math.round(keys.reduce((sum, key) => sum + Number(evaluation[key] || 0), 0) / keys.length);
+    }
+
+    function getConversionDecision(score) {
+      if (score >= 85) return { text: "建议优先转正", className: "green" };
+      if (score >= 75) return { text: "可培养观察", className: "amber" };
+      return { text: "暂缓转正", className: "" };
+    }
+
+    function getGrowthSummary(evaluation) {
+      const strongest = evaluationDimensions().reduce((best, item) => evaluation[item.key] > evaluation[best.key] ? item : best);
+      const weakest = evaluationDimensions().reduce((low, item) => evaluation[item.key] < evaluation[low.key] ? item : low);
+      return `${strongest.label}表现突出，下一阶段重点提升${weakest.label}。`;
+    }
+
+    function clusterQuestions(studentIds) {
+      const buckets = [
+        { name: "数据口径", keys: ["口径", "转化率", "计算", "数据", "有效线索"], examples: [] },
+        { name: "内容与文案", keys: ["内容", "文案", "按钮", "标题", "话术", "选题"], examples: [] },
+        { name: "投放与渠道", keys: ["投放", "渠道", "达人", "竞品", "互动率"], examples: [] },
+        { name: "活动执行", keys: ["活动", "沙龙", "物料", "到场", "时间"], examples: [] },
+        { name: "转化策略", keys: ["转化", "社群", "价格", "异议", "预约"], examples: [] }
+      ];
+
+      studentIds.flatMap((id) => state.questions[id]).forEach((question) => {
+        const bucket = buckets.find((item) => item.keys.some((key) => question.text.includes(key))) || buckets[1];
+        bucket.examples.push(question.text);
+      });
+
+      return buckets
+        .filter((bucket) => bucket.examples.length)
+        .map((bucket) => ({ name: bucket.name, count: bucket.examples.length, examples: bucket.examples }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    function personalSuggestions(stats) {
+      if (stats.delayed > 0) {
+        return ["先处理已延期任务，向导师明确需要确认的口径或资源。", "把大任务拆成今日可交付的小步骤，完成后及时更新进度。"];
+      }
+      return ["保持任务进度每日更新，方便导师及时给出反馈。", "遇到营销口径、素材标准或转化策略不确定时，及时在任务下提问。"];
+    }
+
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
